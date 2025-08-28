@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Camera System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: transparent;
+            color: white;
+            overflow: hidden;
+        }
+
+        .ui-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #cc3333;
+        }
+
+        /* Camera Setup UI */
+        #cameraSetupUI .coords-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        #cameraSetupUI .rotation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        /* Camera Panel UI */
+        .camera-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .camera-item {
+            background: #444;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff88;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .camera-item:hover {
+            background: #555;
+            transform: translateX(5px);
+        }
+
+        .camera-item h4 {
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+
+        .camera-item p {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        /* Camera View Overlay */
+        .camera-overlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            display: none;
+        }
+
+        .camera-overlay h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .recording-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 10px;
+            border-radius: 50px;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Clip Menu */
+        .clip-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .clip-item {
+            background: #444;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clip-info h5 {
+            color: #00ff88;
+            margin-bottom: 3px;
+        }
+
+        .clip-info p {
+            color: #ccc;
+            font-size: 11px;
+        }
+
+        /* Sheet UI */
+        .sheet-editor {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .sheet-editor textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        /* Police Report UI */
+        .report-form textarea {
+            min-height: 100px;
+        }
+
+        .location-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .location-info h4 {
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            .coords-grid, .rotation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Camera Setup UI -->
+    <div id="cameraSetupUI" class="ui-container">
+        <div class="modal">
+            <h2>🎥 Posiziona Telecamera</h2>
+            <form id="cameraSetupForm">
+                <div class="form-group">
+                    <label>Posizione</label>
+                    <div class="coords-grid">
+                        <input type="number" id="camX" placeholder="X" step="0.1">
+                        <input type="number" id="camY" placeholder="Y" step="0.1">
+                        <input type="number" id="camZ" placeholder="Z" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Rotazione</label>
+                    <div class="rotation-grid">
+                        <input type="number" id="camRotX" placeholder="Rot X" step="1" min="-360" max="360">
+                        <input type="number" id="camRotY" placeholder="Rot Y" step="1" min="-360" max="360">
+                        <input type="number" id="camRotZ" placeholder="Rot Z" step="1" min="-360" max="360">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Distanza Massima Rendering (m)</label>
+                    <input type="number" id="maxDistance" value="50" min="10" max="200" step="5">
+                </div>
+                
+                <div class="form-group">
+                    <label>Campo Visivo (FOV)</label>
+                    <input type="number" id="fov" value="60" min="20" max="120" step="5">
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn">Conferma Posizionamento</button>
+                    <button type="button" class="btn btn-danger" onclick="closeUI()">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Camera Panel UI -->
+    <div id="cameraPanelUI" class="ui-container">
+        <div class="modal">
+            <h2>📹 Pannello Telecamere</h2>
+            <div class="camera-list" id="cameraList">
+                <!-- Popolato dinamicamente -->
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-danger" onclick="closeUI()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera View Overlay -->
+    <div id="cameraOverlay" class="camera-overlay">
+        <h3 id="cameraTitle">Telecamera #1</h3>
+        <p id="cameraInfo">Posizione: X, Y, Z</p>
+        <div class="camera-controls">
+            <button class="btn" id="recordBtn">🔴 Registra</button>
+            <button class="btn" id="reportBtn">🚨 Report</button>
+            <button class="btn btn-danger" onclick="exitCamera()">Esci</button>
+        </div>
+    </div>
+
+    <!-- Recording Indicator -->
+    <div id="recordingIndicator" class="recording-indicator">
+        🔴 REC
+    </div>
+
+    <!-- Clip Menu UI -->
+    <div id="clipMenuUI" class="ui-container">
+        <div class="modal">
+            <h2>🎬 Gestione Clip</h2>
+            <div class="clip-list" id="clipList">
+                <!-- Popolato dinamicamente -->
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-danger" onclick="closeUI()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Police Report UI -->
+    <div id="policeReportUI" class="ui-container">
+        <div class="modal">
+            <h2>🚨 Report Polizia</h2>
+            <form id="policeReportForm">
+                <div class="location-info">
+                    <h4>Posizione Telecamera</h4>
+                    <p id="reportLocation">Caricamento...</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrizione Situazione</label>
+                    <textarea id="reportDescription" placeholder="Descrivi cosa hai osservato..." required></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn">Invia Report</button>
+                    <button type="button" class="btn btn-danger" onclick="closeUI()">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sheet UI -->
+    <div id="sheetUI" class="ui-container">
+        <div class="modal sheet-editor">
+            <h2>📝 Sheet ESX</h2>
+            <form id="sheetForm">
+                <div class="form-group">
+                    <label>Titolo</label>
+                    <input type="text" id="sheetTitle" placeholder="Inserisci titolo..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Contenuto</label>
+                    <textarea id="sheetContent" placeholder="Scrivi il contenuto del sheet..." required></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn">Salva Sheet</button>
+                    <button type="button" class="btn btn-danger" onclick="closeUI()">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentCameraData = null;
+        let currentCameraId = null;
+
+        // Event Listeners
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            switch(data.type) {
+                case 'openCameraSetup':
+                    openCameraSetup(data);
+                    break;
+                    
+                case 'openCameraPanel':
+                    openCameraPanel(data);
+                    break;
+                    
+                case 'cameraView':
+                    showCameraOverlay(data);
+                    break;
+                    
+                case 'closeCameraView':
+                    hideCameraOverlay();
+                    break;
+                    
+                case 'openClipMenu':
+                    openClipMenu(data);
+                    break;
+                    
+                case 'openPoliceReport':
+                    openPoliceReport(data);
+                    break;
+                    
+                case 'openSheet':
+                    openSheet();
+                    break;
+                    
+                case 'recordingStatus':
+                    updateRecordingStatus(data.recording);
+                    break;
+                    
+                case 'closeAllUI':
+                    closeAllUI();
+                    break;
+            }
+        });
+
+        // Camera Setup Functions
+        function openCameraSetup(data) {
+            document.getElementById('camX').value = data.coords.x.toFixed(2);
+            document.getElementById('camY').value = data.coords.y.toFixed(2);
+            document.getElementById('camZ').value = data.coords.z.toFixed(2);
+            document.getElementById('camRotZ').value = data.heading.toFixed(0);
+            document.getElementById('camRotX').value = 0;
+            document.getElementById('camRotY').value = 0;
+            
+            showUI('cameraSetupUI');
+        }
+
+        document.getElementById('cameraSetupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                x: parseFloat(document.getElementById('camX').value),
+                y: parseFloat(document.getElementById('camY').value),
+                z: parseFloat(document.getElementById('camZ').value),
+                rotX: parseFloat(document.getElementById('camRotX').value),
+                rotY: parseFloat(document.getElementById('camRotY').value),
+                rotZ: parseFloat(document.getElementById('camRotZ').value),
+                maxDistance: parseFloat(document.getElementById('maxDistance').value),
+                fov: parseFloat(document.getElementById('fov').value)
+            };
+            
+            fetch(`https://${GetParentResourceName()}/confirmCameraPlacement`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            });
+            
+            closeUI();
+        });
+
+        // Camera Panel Functions
+        function openCameraPanel(data) {
+            const cameraList = document.getElementById('cameraList');
+            cameraList.innerHTML = '';
+            
+            data.cameras.forEach((camera, index) => {
+                const cameraItem = document.createElement('div');
+                cameraItem.className = 'camera-item';
+                cameraItem.innerHTML = `
+                    <h4>Telecamera #${camera.id}</h4>
+                    <p>Posizione: ${camera.coords.x.toFixed(1)}, ${camera.coords.y.toFixed(1)}, ${camera.coords.z.toFixed(1)}</p>
+                    <p>FOV: ${camera.fov}° | Max Distance: ${camera.maxDistance}m</p>
+                `;
+                
+                cameraItem.addEventListener('click', function() {
+                    viewCamera(camera.id);
+                });
+                
+                cameraList.appendChild(cameraItem);
+            });
+            
+            showUI('cameraPanelUI');
+        }
+
+        function viewCamera(cameraId) {
+            fetch(`https://${GetParentResourceName()}/viewCamera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({cameraId: cameraId})
+            });
+            
+            currentCameraId = cameraId;
+            closeUI();
+        }
+
+        // Camera Overlay Functions
+        function showCameraOverlay(data) {
+            currentCameraData = data.cameraData;
+            currentCameraId = data.cameraId;
+            
+            document.getElementById('cameraTitle').textContent = `Telecamera #${data.cameraId}`;
+            document.getElementById('cameraInfo').textContent = 
+                `Posizione: ${data.cameraData.coords.x.toFixed(1)}, ${data.cameraData.coords.y.toFixed(1)}, ${data.cameraData.coords.z.toFixed(1)}`;
+            
+            document.getElementById('cameraOverlay').style.display = 'block';
+        }
+
+        function hideCameraOverlay() {
+            document.getElementById('cameraOverlay').style.display = 'none';
+            currentCameraData = null;
+            currentCameraId = null;
+        }
+
+        function exitCamera() {
+            fetch(`https://${GetParentResourceName()}/exitCamera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            });
+        }
+
+        // Recording Functions
+        document.getElementById('recordBtn').addEventListener('click', function() {
+            if (!currentCameraId) return;
+            
+            const isRecording = document.getElementById('recordingIndicator').style.display === 'block';
+            
+            if (!isRecording) {
+                fetch(`https://${GetParentResourceName()}/startRecording`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({cameraId: currentCameraId})
+                });
+            } else {
+                fetch(`https://${GetParentResourceName()}/stopRecording`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({cameraId: currentCameraId})
+                });
+            }
+        });
+
+        function updateRecordingStatus(recording) {
+            const indicator = document.getElementById('recordingIndicator');
+            const recordBtn = document.getElementById('recordBtn');
+            
+            if (recording) {
+                indicator.style.display = 'block';
+                recordBtn.textContent = '⏹️ Stop';
+                recordBtn.classList.add('btn-danger');
+            } else {
+                indicator.style.display = 'none';
+                recordBtn.textContent = '🔴 Registra';
+                recordBtn.classList.remove('btn-danger');
+            }
+        }
+
+        // Clip Menu Functions
+        function openClipMenu(data) {
+            const clipList = document.getElementById('clipList');
+            clipList.innerHTML = '';
+            
+            if (data.recordings.length === 0) {
+                clipList.innerHTML = '<p style="text-align: center; color: #ccc;">Nessuna clip disponibile</p>';
+            } else {
+                data.recordings.forEach(clip => {
+                    const clipItem = document.createElement('div');
+                    clipItem.className = 'clip-item';
+                    
+                    const date = new Date(clip.timestamp * 1000);
+                    const duration = Math.floor(clip.duration / 1000);
+                    
+                    clipItem.innerHTML = `
+                        <div class="clip-info">
+                            <h5>Clip #${clip.id}</h5>
+                            <p>${date.toLocaleString()}</p>
+                            <p>Durata: ${duration}s | Camera: #${clip.cameraId}</p>
+                        </div>
+                        <div>
+                            <button class="btn" onclick="playClip(${clip.id})">▶️</button>
+                            <button class="btn btn-danger" onclick="deleteClip(${clip.id})">🗑️</button>
+                        </div>
+                    `;
+                    
+                    clipList.appendChild(clipItem);
+                });
+            }
+            
+            showUI('clipMenuUI');
+        }
+
+        function playClip(clipId) {
+            // Implementa riproduzione clip
+            console.log('Playing clip:', clipId);
+        }
+
+        function deleteClip(clipId) {
+            if (confirm('Sei sicuro di voler eliminare questa clip?')) {
+                fetch(`https://${GetParentResourceName()}/deleteClip`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({clipId: clipId})
+                });
+            }
+        }
+
+        // Police Report Functions
+        function openPoliceReport(data) {
+            document.getElementById('reportLocation').textContent = 
+                `${data.coords.x.toFixed(1)}, ${data.coords.y.toFixed(1)}, ${data.coords.z.toFixed(1)}`;
+            document.getElementById('reportDescription').value = '';
+            
+            showUI('policeReportUI');
+        }
+
+        document.getElementById('reportBtn').addEventListener('click', function() {
+            if (currentCameraData) {
+                openPoliceReport({coords: currentCameraData.coords});
+            }
+        });
+
+        document.getElementById('policeReportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const description = document.getElementById('reportDescription').value;
+            const coords = currentCameraData ? currentCameraData.coords : {x: 0, y: 0, z: 0};
+            
+            fetch(`https://${GetParentResourceName()}/sendPoliceReport`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    coords: coords,
+                    description: description
+                })
+            });
+            
+            closeUI();
+        });
+
+        // Sheet Functions
+        function openSheet() {
+            document.getElementById('sheetTitle').value = '';
+            document.getElementById('sheetContent').value = '';
+            showUI('sheetUI');
+        }
+
+        document.getElementById('sheetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('sheetTitle').value;
+            const content = document.getElementById('sheetContent').value;
+            
+            fetch(`https://${GetParentResourceName()}/saveSheet`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    title: title,
+                    content: content
+                })
+            });
+            
+            closeUI();
+        });
+
+        // Utility Functions
+        function showUI(uiId) {
+            closeAllUI();
+            document.getElementById(uiId).style.display = 'flex';
+        }
+
+        function closeUI() {
+            closeAllUI();
+            
+            fetch(`https://${GetParentResourceName()}/closeUI`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            });
+        }
+
+        function closeAllUI() {
+            const uis = ['cameraSetupUI', 'cameraPanelUI', 'clipMenuUI', 'policeReportUI', 'sheetUI'];
+            uis.forEach(ui => {
+                document.getElementById(ui).style.display = 'none';
+            });
+        }
+
+        // ESC Key Handler
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeUI();
+            }
+        });
+
+        // Prevent context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Get resource name helper
+        function GetParentResourceName() {
+            return window.location.hostname;
+        }
+    </script>
