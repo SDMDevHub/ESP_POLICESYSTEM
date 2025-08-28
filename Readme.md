@@ -64,7 +64,7 @@ ESP_POLICESYSTEM is a comprehensive security surveillance solution designed for 
 wget https://github.com/your-repo/ESP_POLICESYSTEM/releases/latest/download/ESP_POLICESYSTEM.zip
 
 # Extract to your resources folder
-unzip ESP_POLICESYSTEM.zip -d /path/to/your/server/resources/
+tar -xf ESP_POLICESYSTEM.zip -d /path/to/your/server/resource/
 ```
 
 ### Step 2: Database Setup
